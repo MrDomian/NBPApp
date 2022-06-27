@@ -16,11 +16,24 @@ class Currency:
 
     def get_face_value(self):
         try:
-            response = requests.get(url=f"http://api.nbp.pl/api/exchangerates/rates/a/asd/{self.face_value}")
+            api_url = f"http://api.nbp.pl/api/exchangerates/rates/a/{self.face_value}"
+            response = requests.get(url=api_url)
             return response.json()
         except:
             text = 'Some problems'
             return text
+
+# class Value:
+#     zmienna = ""
+#     waluta = Currency(zmienna)
+#
+#     def __init__(self, zmienna, waluta):
+#         self.zmienna = zmienna
+#         self.waluta = waluta
+#
+#     def generate_table_face_value(self):
+#         Currency.get_face_value().get('rates')
+#         for item in self.waluta:
 
 
 # Downloading exchange rates: Dollar(USD) and Euro(EUR)
@@ -65,9 +78,12 @@ try:
     # Generate excel file for product table
     generate_excel('product_excel', connection)
 
+
 except mysql.connector.Error as err:
-    print('Connection error, check that the database is turned on.', err.errno, 'n', err)
+    print(err.errno, ":", err)  # Console
+    logging.debug('Connection error, check that the database is turned on.')  # currency.log
 except:
-    print('Connection error, please contact the administrator', 'n')
+    print('Connection error')  # Console
+    logging.debug('Connection error, please contact the administrator.')  # currency.log
 else:
     connection.close()

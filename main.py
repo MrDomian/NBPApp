@@ -1,9 +1,10 @@
 import logging
 import traceback
 
-import requests
 import mysql.connector
+import requests
 from pandas.io import sql
+
 
 # Implement event logging system
 logging.basicConfig(filename='currency.log',
@@ -23,21 +24,8 @@ class Currency:
             api_url = f"http://api.nbp.pl/api/exchangerates/rates/a/{self.face_value}"
             response = requests.get(url=api_url)
             return response.json()
-        except:
-            logging.debug('API: Connection error, status code: {}'.format(response.status_code))
-
-
-# class Value:
-#     zmienna = ""
-#     waluta = Currency(zmienna)
-#
-#     def __init__(self, zmienna, waluta):
-#         self.zmienna = zmienna
-#         self.waluta = waluta
-#
-#     def generate_table_face_value(self):
-#         Currency.get_face_value().get('rates')
-#         for item in self.waluta:
+        except Exception:
+            logging.error('API: Connection error, status code: {}'.format(response.status_code))
 
 
 try:
@@ -55,7 +43,6 @@ try:
 
     logging.debug('USD exchange rate: {}'.format(face_value_usd))
     logging.debug('EUR exchange rate: {}'.format(face_value_euro))
-
 
     # Connect with database: mydb
     connection = mysql.connector.connect(user='root',
@@ -77,23 +64,19 @@ try:
         excel = sql.read_sql(
             'SELECT ProductID, DepartmentID, Category, IDSKU, ProductName, Quantity, UnitPrice, UnitPriceUSD, UnitPriceEuro, Ranking, ProductDesc, UnitsInStock, UnitsInOrder FROM product',
             db_connection)
-        excel.to_excel(name + '.xls')
-
+        try:
+            logging.debug("EXCEL: Successfully export the excel file".format(excel.to_excel(name + '.xls')))
+        except:
+            logging.debug('EXCEL: Error exporting to excel')
 
     # Generate excel file for product table
     generate_excel('product_excel', connection)
 
 except AttributeError as err:
-    print("Error, check file: currency.log")
-    logging.debug("API: Check API status code: {}".format(err))
-
+    logging.debug(err)
 except mysql.connector.Error as err:
-    print("Error, check file: currency.log")
     logging.debug('DATABASE: Connection error, check that the database is turned on. {}. {}'.format(err.errno, err))
-
-except Exception as e:
-    print("Error, check file: currency.log")
+except Exception:
     logging.error(traceback.format_exc())
-
 else:
     connection.close()
